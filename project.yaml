@@ -1,0 +1,15 @@
+specVersion: 0.0.1
+description: The project for getting the on chain data of Kusama
+repository: ''
+schema: ./schema.graphql
+network:
+  # endpoint: wss://kusama.api.onfinality.io/public-ws
+  endpoint: wss://testnet-relay-rpc.parallel.fi
+dataSources:
+  - name: main
+    kind: substrate/Runtime
+    startBlock: 87861
+    mapping:
+      handlers:
+        - handler: handleContributionCall
+          kind: substrate/CallHandler
