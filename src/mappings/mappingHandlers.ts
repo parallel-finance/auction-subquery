@@ -59,7 +59,6 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
 const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
   let batchAllCall = extrinsic.extrinsic.args[2] as Extrinsic;
   let calls = batchAllCall.args[0] as Vec<Extrinsic>;
-  logger.info(calls.toString());
   let [remarkCall, ...transitionCalls] = calls.toArray();
   if (checkTransaction("system", "remark", remarkCall)) {
     logger.info(parseRemark(remarkCall.args[0].toString()));
@@ -76,6 +75,7 @@ const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
     for (let entity of entities) {
       let record = DotContribution.create(entity);
       record.transactionExecuted = true;
+      logger.info(JSON.stringify(record));
       await record.save();
     }
   }

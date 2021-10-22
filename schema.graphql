@@ -15,7 +15,7 @@ type DotContribution @entity {
   blockHeight: Int! @index
   paraId: Int!
   account: String!
-  amount: BigInt!
+  amount: String!
   referralCode: String
   timestamp: Date!
   transactionExecuted: Boolean!
