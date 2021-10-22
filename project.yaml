@@ -9,7 +9,7 @@ network:
 dataSources:
   - name: app
     kind: substrate/Runtime
-    startBlock: 146772
+    startBlock: 147768
     mapping:
       handlers:
         - handler: handleBatchAll
@@ -17,4 +17,10 @@ dataSources:
           filter:
             module: utility
             method: batchAll
+            success: true
+        - handler: handleProxyProxyCall
+          kind: substrate/CallHandler
+          filter:
+            module: proxy
+            method: proxy
             success: true

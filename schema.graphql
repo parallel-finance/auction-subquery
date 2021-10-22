@@ -12,7 +12,7 @@ type Contribution @entity {
 type DotContribution @entity {
   id: ID!
 
-  blockHeight: Int!
+  blockHeight: Int! @index
   paraId: Int!
   account: String!
   amount: BigInt!

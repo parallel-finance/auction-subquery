@@ -10,9 +10,18 @@ const parseRemark = (remark: { toString: () => string }) => {
   return Buffer.from(remark.toString().slice(2), "hex").toString("utf8");
 };
 
+const checkTransaction = (sectionFilter: string, methodFilter: string, call: Extrinsic) => {
+  let { section, method } = api.registry.findMetaCall(call.callIndex);
+  return section === sectionFilter && method === methodFilter;
+};
+
 const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
   let calls = extrinsic.extrinsic.args[0] as Vec<Extrinsic>;
-  if (calls.length !== 2) {
+  if (
+    calls.length !== 2 ||
+    !checkTransaction("system", "remark", calls[0]) ||
+    !checkTransaction("balances", "transfer", calls[1])
+  ) {
     return;
   }
   let [
@@ -48,12 +57,14 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
 };
 
 const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
-  let calls = extrinsic.extrinsic.args[0] as Vec<Extrinsic>;
+  let batchAllCall = extrinsic.extrinsic.args[2] as Extrinsic;
+  let calls = batchAllCall.args[0] as Vec<Extrinsic>;
+  logger.info(calls.toString());
   let [remarkCall, ...transitionCalls] = calls.toArray();
-  if (api.tx.system.remark.is(remarkCall)) {
+  if (checkTransaction("system", "remark", remarkCall)) {
     logger.info(parseRemark(remarkCall.args[0].toString()));
   }
-  if (transitionCalls.filter((trans) => !api.tx.balances.transfer.is(trans)).length > 0) {
+  if (transitionCalls.filter((trans) => !checkTransaction("crowdloan", "contribute", trans)).length > 0) {
     return;
   }
 
@@ -61,18 +72,20 @@ const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
     .split(":")
     .map((v) => parseInt(v));
   for (let i = start; i <= end; i++) {
-    let entities = await store.getByField("DotContribution", "blockHeight", i);
+    let entities = await DotContribution.getByBlockHeight(i);
     for (let entity of entities) {
-      await store.set("DotContribution", entity.id, {
-        transactionExecuted: true,
-        ...entity,
-      } as any);
+      let record = DotContribution.create(entity);
+      record.transactionExecuted = true;
+      await record.save();
     }
   }
 };
 
 export const handleBatchAll = async (extrinsic: SubstrateExtrinsic) => {
   await handleDotContribution(extrinsic);
+};
+
+export const handleProxyProxyCall = async (extrinsic: SubstrateExtrinsic) => {
   await handleAuctionBot(extrinsic);
 };
 
