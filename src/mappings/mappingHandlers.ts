@@ -4,7 +4,7 @@ import type { Balance, Extrinsic } from "@polkadot/types/interfaces";
 import type { Vec } from "@polkadot/types";
 
 // ALICE
-const MULTISIG_ADDR = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+const MULTISIG_ADDR = "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F";
 
 const parseRemark = (remark: { toString: () => string }) => {
   return Buffer.from(remark.toString().slice(2), "hex").toString("utf8");
@@ -57,7 +57,11 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
 };
 
 const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
+  //TODO(alannotnerd): check real account
   let batchAllCall = extrinsic.extrinsic.args[2] as Extrinsic;
+  if (!checkTransaction("utility", "batchAll", batchAllCall)) {
+    return;
+  }
   let calls = batchAllCall.args[0] as Vec<Extrinsic>;
   let [remarkCall, ...transitionCalls] = calls.toArray();
   if (checkTransaction("system", "remark", remarkCall)) {

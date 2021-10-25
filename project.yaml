@@ -4,12 +4,12 @@ repository: "https://github.com/parallel-finance/auction-subquery"
 schema: ./schema.graphql
 network:
   # endpoint: wss://kusama.api.onfinality.io/public-ws
-  endpoint: wss://testnet-relay-rpc.parallel.fi
+  endpoint: ws://172.17.0.1:9944
   # dictionary: "https://api.subquery.network/sq/subquery/dictionary-kusama"
 dataSources:
   - name: app
     kind: substrate/Runtime
-    startBlock: 147768
+    startBlock: 12080
     mapping:
       handlers:
         - handler: handleBatchAll
