@@ -1,7 +1,7 @@
 import { SubstrateExtrinsic } from "@subql/types";
 import { Contribution, DotContribution } from "../types";
 import type { Balance, Extrinsic } from "@polkadot/types/interfaces";
-import type { Vec } from "@polkadot/types";
+import type { Vec, Option } from "@polkadot/types";
 
 // ALICE
 const MULTISIG_ADDR = "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL";
@@ -39,6 +39,8 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
 
   logger.info(remarkRaw.toString());
   const [paraId, referralCode] = parseRemark(remarkRaw).split("#");
+  const fund = (await api.query.crowdloan.funds(paraId)) as Option<any>;
+  if (fund.isNone) return;
 
   const record = DotContribution.create({
     id: extrinsic.extrinsic.hash.toString(),
