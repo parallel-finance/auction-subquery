@@ -1,18 +1,25 @@
 specVersion: 0.0.1
 description: The project for getting the on chain data of Kusama
-repository: 'https://github.com/parallel-finance/auction-subquery'
+repository: "https://github.com/parallel-finance/auction-subquery"
 schema: ./schema.graphql
 network:
-  endpoint: wss://kusama.api.onfinality.io/public-ws
-  #endpoint: wss://testnet-relay-rpc.parallel.fi
-  dictionary: "https://api.subquery.network/sq/subquery/dictionary-kusama"
+  endpoint: wss://regnet-relay-rpc.parallel.fi
+  # dictionary: "https://api.subquery.network/sq/subquery/dictionary-kusama"
 dataSources:
-  - name: main
+  - name: app
     kind: substrate/Runtime
-    startBlock: 8858548
+    startBlock: 10420
     mapping:
       handlers:
-        - handler: handleContributionCall
+        - handler: handleBatchAll
           kind: substrate/CallHandler
           filter:
+            module: utility
+            method: batchAll
+            success: true
+        - handler: handleProxyProxyCall
+          kind: substrate/CallHandler
+          filter:
+            module: proxy
+            method: proxy
             success: true

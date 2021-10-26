@@ -1,6 +1,101 @@
 import { SubstrateExtrinsic } from "@subql/types";
-import { Contribution } from "../types";
-import { Balance } from "@polkadot/types/interfaces";
+import { Contribution, DotContribution } from "../types";
+import type { Balance, Extrinsic } from "@polkadot/types/interfaces";
+import type { Vec } from "@polkadot/types";
+
+// ALICE
+const MULTISIG_ADDR = "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F";
+
+const parseRemark = (remark: { toString: () => string }) => {
+  return Buffer.from(remark.toString().slice(2), "hex").toString("utf8");
+};
+
+const checkTransaction = (sectionFilter: string, methodFilter: string, call: Extrinsic) => {
+  const { section, method } = api.registry.findMetaCall(call.callIndex);
+  return section === sectionFilter && method === methodFilter;
+};
+
+const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
+  const calls = extrinsic.extrinsic.args[0] as Vec<Extrinsic>;
+  if (
+    calls.length !== 2 ||
+    !checkTransaction("system", "remark", calls[0]) ||
+    !checkTransaction("balances", "transfer", calls[1])
+  ) {
+    return;
+  }
+  const [
+    {
+      args: [remarkRaw],
+    },
+    {
+      args: [addressRaw, amountRaw],
+    },
+  ] = calls.toArray();
+
+  if (addressRaw.toString() !== MULTISIG_ADDR) {
+    return;
+  }
+
+  logger.info(remarkRaw.toString());
+  const [paraId, referralCode] = parseRemark(remarkRaw).split("#");
+
+  const record = DotContribution.create({
+    id: extrinsic.extrinsic.hash.toString(),
+
+    blockHeight: extrinsic.block.block.header.number,
+    paraId: parseInt(paraId),
+    account: extrinsic.extrinsic.signer.toString(),
+    amount: amountRaw.toString(),
+    referralCode,
+    timestamp: extrinsic.block.timestamp,
+    transactionExecuted: false,
+  });
+  logger.info(JSON.stringify(record));
+
+  await record.save();
+};
+
+const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
+  if (extrinsic.extrinsic.args[0].toString() !== MULTISIG_ADDR) {
+    return;
+  }
+
+  const batchAllCall = extrinsic.extrinsic.args[2] as Extrinsic;
+  if (!checkTransaction("utility", "batchAll", batchAllCall)) {
+    return;
+  }
+  const calls = batchAllCall.args[0] as Vec<Extrinsic>;
+  const [remarkCall, ...transitionCalls] = calls.toArray();
+  if (checkTransaction("system", "remark", remarkCall)) {
+    logger.info(parseRemark(remarkCall.args[0].toString()));
+  }
+
+  if (transitionCalls.find((trans) => !checkTransaction("crowdloan", "contribute", trans))) {
+    return;
+  }
+
+  const [start, end] = parseRemark(remarkCall.args[0].toString())
+    .split(":")
+    .map((v) => parseInt(v));
+  for (let i = start; i <= end; i++) {
+    const entities = await DotContribution.getByBlockHeight(i);
+    for (const entity of entities) {
+      let record = DotContribution.create(entity);
+      record.transactionExecuted = true;
+      logger.info(JSON.stringify(record));
+      await record.save();
+    }
+  }
+};
+
+export const handleBatchAll = async (extrinsic: SubstrateExtrinsic) => {
+  await handleDotContribution(extrinsic);
+};
+
+export const handleProxyProxyCall = async (extrinsic: SubstrateExtrinsic) => {
+  await handleAuctionBot(extrinsic);
+};
 
 export async function handleContributionCall(extrinsic: SubstrateExtrinsic): Promise<void> {
   const {

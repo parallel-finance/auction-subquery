@@ -1,6 +1,5 @@
 type Contribution @entity {
   id: ID! #id is a required field
-
   blockHeight: Int!
   paraId: Int!
   account: String!
@@ -8,4 +7,16 @@ type Contribution @entity {
   referralCode: String
   remark: Boolean!
   timestamp: Date!
+}
+
+type DotContribution @entity {
+  id: ID!
+
+  blockHeight: Int! @index
+  paraId: Int!
+  account: String!
+  amount: String!
+  referralCode: String
+  timestamp: Date!
+  transactionExecuted: Boolean!
 }
