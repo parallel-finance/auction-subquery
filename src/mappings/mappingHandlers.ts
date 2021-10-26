@@ -4,7 +4,7 @@ import type { Balance, Extrinsic } from "@polkadot/types/interfaces";
 import type { Vec } from "@polkadot/types";
 
 // ALICE
-const MULTISIG_ADDR = "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F";
+const MULTISIG_ADDR = "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL";
 
 const parseRemark = (remark: { toString: () => string }) => {
   return Buffer.from(remark.toString().slice(2), "hex").toString("utf8");
