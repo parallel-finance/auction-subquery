@@ -11,12 +11,12 @@ const parseRemark = (remark: { toString: () => string }) => {
 };
 
 const checkTransaction = (sectionFilter: string, methodFilter: string, call: Extrinsic) => {
-  let { section, method } = api.registry.findMetaCall(call.callIndex);
+  const { section, method } = api.registry.findMetaCall(call.callIndex);
   return section === sectionFilter && method === methodFilter;
 };
 
 const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
-  let calls = extrinsic.extrinsic.args[0] as Vec<Extrinsic>;
+  const calls = extrinsic.extrinsic.args[0] as Vec<Extrinsic>;
   if (
     calls.length !== 2 ||
     !checkTransaction("system", "remark", calls[0]) ||
@@ -24,7 +24,7 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
   ) {
     return;
   }
-  let [
+  const [
     {
       args: [remarkRaw],
     },
@@ -38,9 +38,9 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
   }
 
   logger.info(remarkRaw.toString());
-  let [paraId, referralCode] = parseRemark(remarkRaw).split("#");
+  const [paraId, referralCode] = parseRemark(remarkRaw).split("#");
 
-  let record = DotContribution.create({
+  const record = DotContribution.create({
     id: extrinsic.extrinsic.hash.toString(),
 
     blockHeight: extrinsic.block.block.header.number,
@@ -61,27 +61,26 @@ const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
     return;
   }
 
-  let batchAllCall = extrinsic.extrinsic.args[2] as Extrinsic;
+  const batchAllCall = extrinsic.extrinsic.args[2] as Extrinsic;
   if (!checkTransaction("utility", "batchAll", batchAllCall)) {
     return;
   }
-  let calls = batchAllCall.args[0] as Vec<Extrinsic>;
-  let [remarkCall, ...transitionCalls] = calls.toArray();
+  const calls = batchAllCall.args[0] as Vec<Extrinsic>;
+  const [remarkCall, ...transitionCalls] = calls.toArray();
   if (checkTransaction("system", "remark", remarkCall)) {
     logger.info(parseRemark(remarkCall.args[0].toString()));
   }
 
-  //FIXME(alannotnerd): maybe we could use `find`?
-  if (transitionCalls.filter((trans) => !checkTransaction("crowdloan", "contribute", trans)).length > 0) {
+  if (transitionCalls.find((trans) => !checkTransaction("crowdloan", "contribute", trans))) {
     return;
   }
 
-  let [start, end] = parseRemark(remarkCall.args[0].toString())
+  const [start, end] = parseRemark(remarkCall.args[0].toString())
     .split(":")
     .map((v) => parseInt(v));
   for (let i = start; i <= end; i++) {
-    let entities = await DotContribution.getByBlockHeight(i);
-    for (let entity of entities) {
+    const entities = await DotContribution.getByBlockHeight(i);
+    for (const entity of entities) {
       let record = DotContribution.create(entity);
       record.transactionExecuted = true;
       logger.info(JSON.stringify(record));
