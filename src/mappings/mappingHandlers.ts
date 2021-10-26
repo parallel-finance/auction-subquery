@@ -57,7 +57,10 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
 };
 
 const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
-  //TODO(alannotnerd): check real account
+  if (extrinsic.extrinsic.args[0].toString() !== MULTISIG_ADDR) {
+    return;
+  }
+
   let batchAllCall = extrinsic.extrinsic.args[2] as Extrinsic;
   if (!checkTransaction("utility", "batchAll", batchAllCall)) {
     return;
@@ -67,6 +70,8 @@ const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
   if (checkTransaction("system", "remark", remarkCall)) {
     logger.info(parseRemark(remarkCall.args[0].toString()));
   }
+
+  //FIXME(alannotnerd): maybe we could use `find`?
   if (transitionCalls.filter((trans) => !checkTransaction("crowdloan", "contribute", trans)).length > 0) {
     return;
   }
