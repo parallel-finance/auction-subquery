@@ -1,14 +1,3 @@
-type Contribution @entity {
-  id: ID! #id is a required field
-  blockHeight: Int!
-  paraId: Int!
-  account: String!
-  amount: BigInt!
-  referralCode: String
-  remark: Boolean!
-  timestamp: Date!
-}
-
 type DotContribution @entity {
   id: ID!
 
@@ -19,4 +8,6 @@ type DotContribution @entity {
   referralCode: String
   timestamp: Date!
   transactionExecuted: Boolean!
+  isValid: Boolean!
+  executedAt: Int @index
 }
