@@ -1,12 +1,13 @@
 import { SubstrateExtrinsic } from "@subql/types";
-import { Contribution, DotContribution } from "../types";
-import type { Balance, Extrinsic } from "@polkadot/types/interfaces";
-import type { Vec, Option } from "@polkadot/types";
+import { DotContribution } from "../types";
+import type { Extrinsic } from "@polkadot/types/interfaces";
+import type { Vec, Result, Null } from "@polkadot/types";
 
 // ALICE
 const MULTISIG_ADDR = "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL";
 
 const parseRemark = (remark: { toString: () => string }) => {
+  logger.info(`Remark is ${remark.toString()}`);
   return Buffer.from(remark.toString().slice(2), "hex").toString("utf8");
 };
 
@@ -37,7 +38,6 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
     return;
   }
 
-  logger.info(remarkRaw.toString());
   const [paraId, referralCode] = parseRemark(remarkRaw).split("#");
   const fund = (await api.query.crowdloan.funds(paraId)) as Option<any>;
   if (fund.isNone) return;
@@ -52,6 +52,8 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
     referralCode,
     timestamp: extrinsic.block.timestamp,
     transactionExecuted: false,
+    isValid: true,
+    executedAt: null,
   });
   logger.info(JSON.stringify(record));
 
@@ -67,28 +69,34 @@ const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
   if (!checkTransaction("utility", "batchAll", batchAllCall)) {
     return;
   }
+
   const calls = batchAllCall.args[0] as Vec<Extrinsic>;
-  const [remarkCall, ...transitionCalls] = calls.toArray();
-  if (checkTransaction("system", "remark", remarkCall)) {
-    logger.info(parseRemark(remarkCall.args[0].toString()));
+  const [remarkCall, contributionCall] = calls.toArray();
+  if (
+    checkTransaction("system", "remark", remarkCall) &&
+    checkTransaction("crowdloan", "contribute", contributionCall)
+  ) {
+    logger.info(`Fetch execution of ${remarkCall.args[0].toString()}`);
   }
 
-  if (transitionCalls.find((trans) => !checkTransaction("crowdloan", "contribute", trans))) {
+  const txId = remarkCall.args[0].toString();
+  const entity = await DotContribution.get(txId);
+
+  const {
+    event: {
+      data: [result],
+    },
+  } = extrinsic.events.find((e) => e.event.section === "proxy" && e.event.method === "ProxyExecuted");
+  if ((result as Result<Null, any>).isErr) {
+    logger.error("Proxy excuted failed");
+    entity.isValid = false;
+    await entity.save();
     return;
   }
 
-  const [start, end] = parseRemark(remarkCall.args[0].toString())
-    .split(":")
-    .map((v) => parseInt(v));
-  for (let i = start; i <= end; i++) {
-    const entities = await DotContribution.getByBlockHeight(i);
-    for (const entity of entities) {
-      let record = DotContribution.create(entity);
-      record.transactionExecuted = true;
-      logger.info(JSON.stringify(record));
-      await record.save();
-    }
-  }
+  entity.transactionExecuted = true;
+  entity.executedAt = extrinsic.block.block.header.number.toNumber();
+  await entity.save();
 };
 
 export const handleBatchAll = async (extrinsic: SubstrateExtrinsic) => {
@@ -98,41 +106,3 @@ export const handleBatchAll = async (extrinsic: SubstrateExtrinsic) => {
 export const handleProxyProxyCall = async (extrinsic: SubstrateExtrinsic) => {
   await handleAuctionBot(extrinsic);
 };
-
-export async function handleContributionCall(extrinsic: SubstrateExtrinsic): Promise<void> {
-  const {
-    events,
-    extrinsic: { hash },
-    block,
-  } = extrinsic;
-  const contributionEvent = events.find(({ event }) => event.section === "crowdloan" && event.method === "Contributed");
-  if (contributionEvent) {
-    let contributionRecord = new Contribution(hash.toString());
-    const {
-      event: {
-        data: [contributeAccount, contributeParaId, contributeValue],
-      },
-    } = contributionEvent;
-    contributionRecord.blockHeight = block.block.header.number.toNumber();
-    contributionRecord.timestamp = block.timestamp;
-    contributionRecord.account = contributeAccount.toString();
-    contributionRecord.paraId = parseInt(contributeParaId.toString());
-    contributionRecord.amount = (contributeValue as Balance).toBigInt();
-    contributionRecord.remark = false;
-
-    const memoUpdatedEvent = events.find(
-      ({ event }) => event.section === "crowdloan" && event.method === "MemoUpdated"
-    );
-    if (memoUpdatedEvent) {
-      const {
-        event: {
-          data: [memoAccount, memoParaId, memo],
-        },
-      } = memoUpdatedEvent;
-      if (contributeAccount.eq(memoAccount) && contributeParaId.eq(memoParaId)) {
-        contributionRecord.referralCode = memo.toString();
-      }
-    }
-    await contributionRecord.save();
-  }
-}
