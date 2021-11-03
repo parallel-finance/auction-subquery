@@ -90,8 +90,6 @@ const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
   if ((result as Result<Null, any>).isErr) {
     logger.error("Proxy excuted failed");
     entity.isValid = false;
-    await entity.save();
-    return;
   }
 
   entity.transactionExecuted = true;
