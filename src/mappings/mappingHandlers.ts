@@ -1,7 +1,7 @@
 import { SubstrateExtrinsic } from "@subql/types";
 import { DotContribution } from "../types";
 import type { Extrinsic } from "@polkadot/types/interfaces";
-import type { Vec, Result, Null } from "@polkadot/types";
+import type { Vec, Result, Null, Option } from "@polkadot/types";
 
 // ALICE
 const MULTISIG_ADDR = "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL";
