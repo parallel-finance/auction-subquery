@@ -16,6 +16,17 @@ const checkTransaction = (sectionFilter: string, methodFilter: string, call: Ext
   return section === sectionFilter && method === methodFilter;
 };
 
+const checkTransactionInsideProxy = (sectionFilter: string, methodFilter: string, call: Extrinsic) => {
+  if (!checkTransaction("proxy", "proxy", call)) return false;
+  const addr = call.args[0].toString();
+  if (addr !== MULTISIG_ADDR) {
+    logger.debug("Found proxy address: " + addr + ", expected: " + MULTISIG_ADDR);
+    return false;
+  }
+  const insideCall = call.args[2] as Extrinsic;
+  return checkTransaction(sectionFilter, methodFilter, insideCall);
+};
+
 const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
   const calls = extrinsic.extrinsic.args[0] as Vec<Extrinsic>;
   if (
@@ -53,7 +64,7 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
     timestamp: extrinsic.block.timestamp,
     transactionExecuted: false,
     isValid: true,
-    executedAt: null,
+    executedBlockHeight: null,
   });
   logger.info(JSON.stringify(record));
 
@@ -61,23 +72,23 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
 };
 
 const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
-  if (extrinsic.extrinsic.args[0].toString() !== MULTISIG_ADDR) {
-    return;
-  }
+  // batchAll[
+  //  remark(previous_hash)
+  //  proxy(contribute(amount))
+  //  proxy(addMemo(referralCode))
+  // ]
+  const [remarkCall, proxyContributeCall, proxyMemoCall] = (extrinsic.extrinsic.args[0] as Vec<Extrinsic>).toArray();
 
-  const batchAllCall = extrinsic.extrinsic.args[2] as Extrinsic;
-  if (!checkTransaction("utility", "batchAll", batchAllCall)) {
-    return;
-  }
-
-  const calls = batchAllCall.args[0] as Vec<Extrinsic>;
-  const [remarkCall, contributionCall] = calls.toArray();
+  // Check format
   if (
-    checkTransaction("system", "remark", remarkCall) &&
-    checkTransaction("crowdloan", "contribute", contributionCall)
+    !checkTransaction("system", "remark", remarkCall) ||
+    !checkTransactionInsideProxy("crowdloan", "contribute", proxyContributeCall)
+    // (proxyMemoCall && !checkTransaction("crowdloan", "addMemo", proxyMemoCall))
   ) {
-    logger.info(`Fetch execution of ${remarkCall.args[0].toString()}`);
+    return;
   }
+
+  logger.info(`Fetch execution of ${remarkCall.args[0].toString()}`);
 
   const txId = remarkCall.args[0].toString();
   const entity = await DotContribution.get(txId);
@@ -93,14 +104,11 @@ const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
   }
 
   entity.transactionExecuted = true;
-  entity.executedAt = extrinsic.block.block.header.number.toNumber();
+  entity.executedBlockHeight = extrinsic.block.block.header.number.toNumber();
   await entity.save();
 };
 
 export const handleBatchAll = async (extrinsic: SubstrateExtrinsic) => {
   await handleDotContribution(extrinsic);
-};
-
-export const handleProxyProxyCall = async (extrinsic: SubstrateExtrinsic) => {
   await handleAuctionBot(extrinsic);
 };
