@@ -8,7 +8,7 @@ network:
 dataSources:
   - name: app
     kind: substrate/Runtime
-    startBlock: 142620
+    startBlock: 144560
     mapping:
       handlers:
         - handler: handleBatchAll
