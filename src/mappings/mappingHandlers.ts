@@ -51,7 +51,6 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
 
   const [paraId, referralCode] = parseRemark(remarkRaw).split("#");
   const fund = (await api.query.crowdloan.funds(paraId)) as Option<any>;
-  if (fund.isNone) return;
 
   const record = DotContribution.create({
     id: extrinsic.extrinsic.hash.toString(),
@@ -63,6 +62,7 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
     referralCode,
     timestamp: extrinsic.block.timestamp,
     transactionExecuted: false,
+    isPending: fund.isNone,
     isValid: true,
     executedBlockHeight: null,
   });

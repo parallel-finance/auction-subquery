@@ -9,5 +9,6 @@ type DotContribution @entity {
   timestamp: Date!
   transactionExecuted: Boolean!
   isValid: Boolean!
+  isPending: Boolean!
   executedBlockHeight: Int @index
 }
