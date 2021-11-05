@@ -3,8 +3,8 @@ import { DotContribution } from "../types";
 import type { Extrinsic } from "@polkadot/types/interfaces";
 import type { Vec, Result, Null, Option } from "@polkadot/types";
 
-// const MULTISIG_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
-const MULTISIG_ADDR = "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL";
+const MULTISIG_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
+// const MULTISIG_ADDR = "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL";
 
 const parseRemark = (remark: { toString: () => string }) => {
   logger.info(`Remark is ${remark.toString()}`);
@@ -88,10 +88,13 @@ const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
     return;
   }
 
-  logger.info(`Fetch execution of ${remarkCall.args[0].toString()}`);
+  let remark = remarkCall.args[0].toString();
+  if (remark.length !== 66) {
+    remark = parseRemark(remark);
+  }
 
-  const txIds = remarkCall.args[0].toString().split("#");
-  // const entities = await DotContribution.get(txId);
+  const txIds = remark.split("#");
+  txIds.forEach((txId) => logger.info(`Fetch execution of ${txId}`));
   const entities = await Promise.all(txIds.map((txId) => DotContribution.get(txId)));
 
   const {
