@@ -54,7 +54,7 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
   const record = DotContribution.create({
     id: extrinsic.extrinsic.hash.toString(),
 
-    blockHeight: extrinsic.block.block.header.number,
+    blockHeight: extrinsic.block.block.header.number.toNumber(),
     paraId: parseInt(paraId),
     account: extrinsic.extrinsic.signer.toString(),
     amount: amountRaw.toString(),
