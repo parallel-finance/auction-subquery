@@ -1,9 +1,10 @@
-import { SubstrateExtrinsic } from "@subql/types";
+import { SubstrateEvent, SubstrateExtrinsic } from "@subql/types";
 import { DotContribution } from "../types";
 import type { Extrinsic } from "@polkadot/types/interfaces";
 import type { Vec, Result, Null, Option } from "@polkadot/types";
 
-const MULTISIG_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
+// const MULTISIG_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
+const MULTISIG_ADDR = "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL";
 
 const parseRemark = (remark: { toString: () => string }) => {
   logger.info(`Remark is ${remark.toString()}`);
@@ -89,25 +90,42 @@ const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
 
   logger.info(`Fetch execution of ${remarkCall.args[0].toString()}`);
 
-  const txId = remarkCall.args[0].toString();
-  const entity = await DotContribution.get(txId);
+  const txIds = remarkCall.args[0].toString().split("#");
+  // const entities = await DotContribution.get(txId);
+  const entities = await Promise.all(txIds.map((txId) => DotContribution.get(txId)));
 
   const {
     event: {
       data: [result],
     },
   } = extrinsic.events.find((e) => e.event.section === "proxy" && e.event.method === "ProxyExecuted");
+
   if ((result as Result<Null, any>).isErr) {
     logger.error("Proxy excuted failed");
-    entity.isValid = false;
+    entities.forEach((entity) => (entity.isValid = false));
   }
 
-  entity.transactionExecuted = true;
-  entity.executedBlockHeight = extrinsic.block.block.header.number.toNumber();
-  await entity.save();
+  await Promise.all(
+    entities.map((entity) => {
+      entity.transactionExecuted = true;
+      entity.executedBlockHeight = extrinsic.block.block.header.number.toNumber();
+      return entity.save();
+    })
+  );
 };
 
 export const handleBatchAll = async (extrinsic: SubstrateExtrinsic) => {
   await handleDotContribution(extrinsic);
   await handleAuctionBot(extrinsic);
+};
+
+export const handleCrowdloanCreateEvent = async (event: SubstrateEvent) => {
+  const { data } = event.event;
+  const paraId = parseInt(data[0].toString());
+  logger.info(`Parachain#${paraId} launched`);
+
+  let entities = await DotContribution.getByParaId(paraId);
+  logger.info(`Toggle ${entities.length} tasks as in-processing`);
+  entities.forEach((e) => (e.isPending = false));
+  await Promise.all(entities.map((e) => e.save()));
 };
