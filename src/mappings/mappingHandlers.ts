@@ -3,7 +3,7 @@ import { DotContribution } from "../types";
 import type { Extrinsic } from "@polkadot/types/interfaces";
 import type { Vec, Result, Null, Option } from "@polkadot/types";
 
-const MULTISIG_ADDR = "121JsfeSGqCZTP7tEiDCMzo2t4KfshJeHT3X8EoQhdbhuC78";
+const MULTISIG_ADDR = "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL";
 
 const parseRemark = (remark: { toString: () => string }) => {
   logger.info(`Remark is ${remark.toString()}`);
