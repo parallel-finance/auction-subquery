@@ -108,11 +108,9 @@ const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
     },
   } = extrinsic.events.find((e) => e.event.section === "proxy" && e.event.method === "ProxyExecuted");
 
-  if ((result as Result<Null, any>).isErr) {
-    logger.error("Proxy excuted failed");
-    entities.forEach((entity) => (entity.isValid = false));
-  }
+  const status = (result as Result<Null, any>).isOk;
 
+  entities.forEach((entity) => (entity.isValid = status));
   await Promise.all(
     entities.map((entity) => {
       entity.transactionExecuted = true;
