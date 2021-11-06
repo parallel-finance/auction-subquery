@@ -4,7 +4,7 @@ import type { Extrinsic } from "@polkadot/types/interfaces";
 import type { Vec, Result, Null, Option } from "@polkadot/types";
 
 const MULTISIG_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
-const PROXY_ADDR = "5C7dajsTHmcnktAjLDZxEwS3tZuUJrnUmAEEngTbT3xAes1f";
+const PROXY_ADDR = "13vj58X9YtGCRBFHrcxP6GCkBu81ALcqexiwySx18ygqAUw";
 // const MULTISIG_ADDR = "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL";
 
 const parseRemark = (remark: { toString: () => string }) => {
@@ -78,7 +78,7 @@ const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
   //  proxy(contribute(amount))
   //  proxy(addMemo(referralCode))
   // ]
-  if (extrinsic.extrinsic.signer.toString() !== "5C7dajsTHmcnktAjLDZxEwS3tZuUJrnUmAEEngTbT3xAes1f") {
+  if (extrinsic.extrinsic.signer.toString() !== PROXY_ADDR) {
     return;
   }
 
