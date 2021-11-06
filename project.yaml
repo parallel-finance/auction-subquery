@@ -24,3 +24,5 @@ dataSources:
           filter:
             module: crowdloan
             method: Created
+        - handler: hotfixScript
+          kind: substrate/BlockHandler

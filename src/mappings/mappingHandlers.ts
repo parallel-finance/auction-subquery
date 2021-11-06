@@ -1,4 +1,4 @@
-import { SubstrateEvent, SubstrateExtrinsic } from "@subql/types";
+import { SubstrateBlock, SubstrateEvent, SubstrateExtrinsic } from "@subql/types";
 import { DotContribution } from "../types";
 import type { Extrinsic } from "@polkadot/types/interfaces";
 import type { Vec, Result, Null, Option } from "@polkadot/types";
@@ -134,4 +134,12 @@ export const handleCrowdloanCreateEvent = async (event: SubstrateEvent) => {
   logger.info(`Toggle ${entities.length} tasks as in-processing`);
   entities.forEach((e) => (e.isPending = false));
   await Promise.all(entities.map((e) => e.save()));
+};
+
+export const hotfixScript = async (block: SubstrateBlock) => {
+  if (block.block.header.number.toNumber() === 7585800) {
+    let entities = await DotContribution.getByParaId(1010);
+    entities.forEach((e) => (e.paraId = 2002));
+    await Promise.all(entities.map((e) => e.save()));
+  }
 };
