@@ -19,5 +19,3 @@ dataSources:
             module: utility
             method: batchAll
             success: true
-        - handler: hotfixScript
-          kind: substrate/BlockHandler

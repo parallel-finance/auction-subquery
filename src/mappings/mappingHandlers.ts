@@ -121,14 +121,3 @@ export const handleBatchAll = async (extrinsic: SubstrateExtrinsic) => {
   await handleDotContribution(extrinsic);
   await handleAuctionBot(extrinsic);
 };
-
-export const hotfixScript = async (block: SubstrateBlock) => {
-  if (block.block.header.number.toNumber() === 7585800) {
-    let entities = await DotContribution.getByParaId(1010);
-    entities = entities.filter((e) => e.blockHeight <= 7585321);
-    entities.forEach((e) => {
-      e.paraId = 2002;
-    });
-    await Promise.all(entities.map((e) => e.save()));
-  }
-};
