@@ -51,7 +51,6 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
   }
 
   const [paraId, referralCode] = parseRemark(remarkRaw).split("#");
-  const fund = (await api.query.crowdloan.funds(paraId)) as Option<any>;
 
   const record = DotContribution.create({
     id: extrinsic.extrinsic.hash.toString(),
@@ -63,7 +62,6 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
     referralCode,
     timestamp: extrinsic.block.timestamp,
     transactionExecuted: false,
-    isPending: fund.isNone,
     isValid: true,
     executedBlockHeight: null,
   });
@@ -88,7 +86,6 @@ const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
   if (
     !checkTransaction("system", "remark", remarkCall) ||
     !checkTransactionInsideProxy("crowdloan", "contribute", proxyContributeCall)
-    // (proxyMemoCall && !checkTransaction("crowdloan", "addMemo", proxyMemoCall))
   ) {
     return;
   }
@@ -125,24 +122,12 @@ export const handleBatchAll = async (extrinsic: SubstrateExtrinsic) => {
   await handleAuctionBot(extrinsic);
 };
 
-export const handleCrowdloanCreateEvent = async (event: SubstrateEvent) => {
-  const { data } = event.event;
-  const paraId = parseInt(data[0].toString());
-  logger.info(`Parachain#${paraId} launched`);
-
-  let entities = await DotContribution.getByParaId(paraId);
-  logger.info(`Toggle ${entities.length} tasks as in-processing`);
-  entities.forEach((e) => (e.isPending = false));
-  await Promise.all(entities.map((e) => e.save()));
-};
-
 export const hotfixScript = async (block: SubstrateBlock) => {
   if (block.block.header.number.toNumber() === 7585800) {
     let entities = await DotContribution.getByParaId(1010);
     entities = entities.filter((e) => e.blockHeight <= 7585321);
     entities.forEach((e) => {
       e.paraId = 2002;
-      e.isPending = false;
     });
     await Promise.all(entities.map((e) => e.save()));
   }
