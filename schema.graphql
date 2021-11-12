@@ -11,3 +11,8 @@ type DotContribution @entity {
   isValid: Boolean!
   executedBlockHeight: Int @index
 }
+
+type MoonbeanContribution @entity {
+  id: ID!
+  amount: String!
+}

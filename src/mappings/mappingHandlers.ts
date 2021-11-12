@@ -1,5 +1,5 @@
 import { SubstrateBlock, SubstrateEvent, SubstrateExtrinsic } from "@subql/types";
-import { DotContribution } from "../types";
+import { DotContribution, MoonbeanContribution } from "../types";
 import type { Extrinsic } from "@polkadot/types/interfaces";
 import type { Vec, Result, Null, Option } from "@polkadot/types";
 
@@ -120,4 +120,22 @@ const handleAuctionBot = async (extrinsic: SubstrateExtrinsic) => {
 export const handleBatchAll = async (extrinsic: SubstrateExtrinsic) => {
   await handleDotContribution(extrinsic);
   await handleAuctionBot(extrinsic);
+};
+
+export const handleMoonbeamContribute = async ({ event, idx }: SubstrateEvent) => {
+  const [who, fund, amount] = event.data.toArray();
+  if (MULTISIG_ADDR !== who.toString() || fund.toString() !== "2004") {
+    return;
+  }
+
+  let record = await MoonbeanContribution.get("2004");
+  if (record) {
+    record.amount = (BigInt(record.amount) + BigInt(amount.toString())).toString();
+  } else {
+    record = MoonbeanContribution.create({
+      id: fund.toString(),
+      amount: amount.toString(),
+    });
+  }
+  await record.save();
 };
