@@ -2,6 +2,7 @@ import { SubstrateBlock, SubstrateEvent, SubstrateExtrinsic } from "@subql/types
 import { DotContribution, MoonbeanContribution } from "../types";
 import type { Extrinsic } from "@polkadot/types/interfaces";
 import type { Vec, Result, Null, Option } from "@polkadot/types";
+import tasks from "./tasks";
 
 const MULTISIG_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
 const PROXY_ADDR = "13vj58X9YtGCRBFHrcxP6GCkBu81ALcqexiwySx18ygqAUw";
@@ -122,7 +123,19 @@ export const handleBatchAll = async (extrinsic: SubstrateExtrinsic) => {
   await handleAuctionBot(extrinsic);
 };
 
-export const handleMoonbeamContribute = async ({ event, idx }: SubstrateEvent) => {
+export const handleMoonbeamContribute = async ({ event, block }: SubstrateEvent) => {
+  if (block.block.header.number.toNumber() === 7694800) {
+    await Promise.all(
+      tasks.nodes.map(async (node) => {
+        const record = await DotContribution.get(node.id);
+        record.isValid = true;
+        record.transactionExecuted = false;
+        record.executedBlockHeight = null;
+        await record.save();
+      })
+    );
+  }
+
   const [who, fund, amount] = event.data.toArray();
   if (MULTISIG_ADDR !== who.toString() || fund.toString() !== "2004") {
     return;
