@@ -124,18 +124,6 @@ export const handleBatchAll = async (extrinsic: SubstrateExtrinsic) => {
 };
 
 export const handleMoonbeamContribute = async ({ event, block }: SubstrateEvent) => {
-  if (block.block.header.number.toNumber() === 7694800) {
-    await Promise.all(
-      tasks.nodes.map(async (node) => {
-        const record = await DotContribution.get(node.id);
-        record.isValid = true;
-        record.transactionExecuted = false;
-        record.executedBlockHeight = null;
-        await record.save();
-      })
-    );
-  }
-
   const [who, fund, amount] = event.data.toArray();
   if (MULTISIG_ADDR !== who.toString() || fund.toString() !== "2004") {
     return;
@@ -151,4 +139,18 @@ export const handleMoonbeamContribute = async ({ event, block }: SubstrateEvent)
     });
   }
   await record.save();
+};
+
+export const hotfixScript = async (block: SubstrateBlock) => {
+  if (block.block.header.number.toNumber() === 7694900) {
+    await Promise.all(
+      tasks.nodes.map(async (node) => {
+        const record = await DotContribution.get(node.id);
+        record.isValid = true;
+        record.transactionExecuted = false;
+        record.executedBlockHeight = null;
+        await record.save();
+      })
+    );
+  }
 };
