@@ -3,6 +3,7 @@ import { DotContribution, MoonbeanContribution } from "../types";
 import type { Extrinsic } from "@polkadot/types/interfaces";
 import type { Vec, Result, Null, Option } from "@polkadot/types";
 import tasks from "./tasks";
+import moonbeamPatch from "./moonbeam-patch";
 
 const MULTISIG_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
 const PROXY_ADDR = "13vj58X9YtGCRBFHrcxP6GCkBu81ALcqexiwySx18ygqAUw";
@@ -149,6 +150,18 @@ export const hotfixScript = async (block: SubstrateBlock) => {
         record.isValid = true;
         record.transactionExecuted = false;
         record.executedBlockHeight = null;
+        await record.save();
+      })
+    );
+  }
+
+  if (block.block.header.number.toNumber() === 7754100) {
+    await Promise.all(
+      moonbeamPatch.id.map(async (id) => {
+        const record = await DotContribution.get(id);
+        record.isValid = true;
+        record.transactionExecuted = true;
+        record.executedBlockHeight = 7753953;
         await record.save();
       })
     );
