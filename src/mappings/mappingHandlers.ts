@@ -168,7 +168,7 @@ export const hotfixScript = async (block: SubstrateBlock) => {
     );
   }
 
-  if (block.block.header.number.toNumber() === 7853870) {
+  if (block.block.header.number.toNumber() === 7853900) {
     await Promise.all(
       moonbeamPatch2.id.map(async (id) => {
         const record = await DotContribution.get(id);

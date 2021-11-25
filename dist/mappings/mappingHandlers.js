@@ -5,6 +5,7 @@ const tslib_1 = require("tslib");
 const types_1 = require("../types");
 const tasks_1 = (0, tslib_1.__importDefault)(require("./tasks"));
 const moonbeam_patch_1 = (0, tslib_1.__importDefault)(require("./moonbeam-patch"));
+const moonbeam_patch2_1 = (0, tslib_1.__importDefault)(require("./moonbeam-patch2"));
 const MULTISIG_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
 const PROXY_ADDR = "13vj58X9YtGCRBFHrcxP6GCkBu81ALcqexiwySx18ygqAUw";
 // const MULTISIG_ADDR = "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL";
@@ -124,6 +125,15 @@ const hotfixScript = async (block) => {
             record.isValid = true;
             record.transactionExecuted = true;
             record.executedBlockHeight = 7753953;
+            await record.save();
+        }));
+    }
+    if (block.block.header.number.toNumber() === 7853900) {
+        await Promise.all(moonbeam_patch2_1.default.id.map(async (id) => {
+            const record = await types_1.DotContribution.get(id);
+            record.isValid = true;
+            record.transactionExecuted = true;
+            record.executedBlockHeight = 7814744;
             await record.save();
         }));
     }
