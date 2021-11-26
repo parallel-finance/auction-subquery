@@ -5,6 +5,7 @@ import type { Vec, Result, Null, Option } from "@polkadot/types";
 import tasks from "./tasks";
 import moonbeamPatch from "./moonbeam-patch";
 import moonbeamPatch2 from "./moonbeam-patch2";
+import vrfPatch from "./vrf-patch";
 
 const MULTISIG_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
 const PROXY_ADDR = "13vj58X9YtGCRBFHrcxP6GCkBu81ALcqexiwySx18ygqAUw";
@@ -175,6 +176,19 @@ export const hotfixScript = async (block: SubstrateBlock) => {
         record.isValid = true;
         record.transactionExecuted = true;
         record.executedBlockHeight = 7814744;
+        await record.save();
+      })
+    );
+  }
+
+  if (block.block.header.number.toNumber() === 7866150) {
+    const ids = vrfPatch.map((p) => p.id).flat();
+    await Promise.all(
+      ids.map(async (id) => {
+        const record = await DotContribution.get(id);
+        record.isValid = true;
+        record.transactionExecuted = false;
+        record.executedBlockHeight = null;
         await record.save();
       })
     );
