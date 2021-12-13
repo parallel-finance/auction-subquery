@@ -9,7 +9,7 @@ const moonbeam_patch2_1 = (0, tslib_1.__importDefault)(require("./moonbeam-patch
 const vrf_patch_1 = (0, tslib_1.__importDefault)(require("./vrf-patch"));
 const MULTISIG_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
 const PROXY_ADDR = "13vj58X9YtGCRBFHrcxP6GCkBu81ALcqexiwySx18ygqAUw";
-// const MULTISIG_ADDR = "EF9xmEeFv3nNVM3HyLAMTV5TU8jua5FRXCE116yfbbrZbCL";
+// const REFUND_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
 const parseRemark = (remark) => {
     logger.info(`Remark is ${remark.toString()}`);
     return Buffer.from(remark.toString().slice(2), "hex").toString("utf8");
@@ -31,7 +31,7 @@ const checkTransactionInsideProxy = (sectionFilter, methodFilter, call) => {
 };
 const handleDotContribution = async (extrinsic) => {
     const calls = extrinsic.extrinsic.args[0];
-    if (calls.length !== 2 ||
+    if (calls.length < 2 ||
         !checkTransaction("system", "remark", calls[0]) ||
         !checkTransaction("balances", "transfer", calls[1])) {
         return;
@@ -41,11 +41,20 @@ const handleDotContribution = async (extrinsic) => {
         return;
     }
     const [paraId, referralCode] = parseRemark(remarkRaw).split("#");
+    let account = extrinsic.extrinsic.signer.toString();
+    //handle reinvest
+    // if (extrinsic.extrinsic.signer.toString() === REFUND_ADDR) {
+    //   const {
+    //     args: [infoRaw],
+    //   } = calls.toArray()[2];
+    //
+    //   [account] = parseRemark(infoRaw).split("#");
+    // }
     const record = types_1.DotContribution.create({
         id: extrinsic.extrinsic.hash.toString(),
         blockHeight: extrinsic.block.block.header.number.toNumber(),
         paraId: parseInt(paraId),
-        account: extrinsic.extrinsic.signer.toString(),
+        account,
         amount: amountRaw.toString(),
         referralCode,
         timestamp: extrinsic.block.timestamp,
@@ -84,6 +93,7 @@ const handleAuctionBot = async (extrinsic) => {
     await Promise.all(entities.map((entity) => {
         entity.transactionExecuted = true;
         entity.executedBlockHeight = extrinsic.block.block.header.number.toNumber();
+        entity.timestamp = extrinsic.block.timestamp;
         return entity.save();
     }));
 };
