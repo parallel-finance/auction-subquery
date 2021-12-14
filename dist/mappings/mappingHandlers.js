@@ -7,9 +7,9 @@ const tasks_1 = (0, tslib_1.__importDefault)(require("./tasks"));
 const moonbeam_patch_1 = (0, tslib_1.__importDefault)(require("./moonbeam-patch"));
 const moonbeam_patch2_1 = (0, tslib_1.__importDefault)(require("./moonbeam-patch2"));
 const vrf_patch_1 = (0, tslib_1.__importDefault)(require("./vrf-patch"));
-const MULTISIG_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
-const PROXY_ADDR = "13vj58X9YtGCRBFHrcxP6GCkBu81ALcqexiwySx18ygqAUw";
-// const REFUND_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
+const MULTISIG_ADDR = "12fqSn9qVLJL4NY7Uua7bexEAVr9oCpD3e5xmdpNjtQszzBt";
+const PROXY_ADDR = "1egYCubF1U5CGWiXjQnsXduiJYP49KTs8eX1jn1JrTqCYyQ";
+const REFUND_ADDR = "16D2eVuK5SWfwvtFD3gVdBC2nc2BafK31BY6PrbZHBAGew7L";
 const parseRemark = (remark) => {
     logger.info(`Remark is ${remark.toString()}`);
     return Buffer.from(remark.toString().slice(2), "hex").toString("utf8");
@@ -43,13 +43,10 @@ const handleDotContribution = async (extrinsic) => {
     const [paraId, referralCode] = parseRemark(remarkRaw).split("#");
     let account = extrinsic.extrinsic.signer.toString();
     //handle reinvest
-    // if (extrinsic.extrinsic.signer.toString() === REFUND_ADDR) {
-    //   const {
-    //     args: [infoRaw],
-    //   } = calls.toArray()[2];
-    //
-    //   [account] = parseRemark(infoRaw).split("#");
-    // }
+    if (extrinsic.extrinsic.signer.toString() === REFUND_ADDR) {
+        const { args: [infoRaw], } = calls.toArray()[2];
+        [account] = parseRemark(infoRaw).split("#");
+    }
     const record = types_1.DotContribution.create({
         id: extrinsic.extrinsic.hash.toString(),
         blockHeight: extrinsic.block.block.header.number.toNumber(),
