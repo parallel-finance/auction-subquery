@@ -9,7 +9,7 @@ import vrfPatch from "./vrf-patch";
 
 const MULTISIG_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
 const PROXY_ADDR = "13vj58X9YtGCRBFHrcxP6GCkBu81ALcqexiwySx18ygqAUw";
-// const REFUND_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
+const REFUND_ADDR = "14SSXadJt4tQGPu3em75qzPDX6yMgmHrt6LHiN2mLrHUMHR2";
 
 const parseRemark = (remark: { toString: () => string }) => {
   logger.info(`Remark is ${remark.toString()}`);
@@ -59,13 +59,13 @@ const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
   let account = extrinsic.extrinsic.signer.toString();
 
   //handle reinvest
-  // if (extrinsic.extrinsic.signer.toString() === REFUND_ADDR) {
-  //   const {
-  //     args: [infoRaw],
-  //   } = calls.toArray()[2];
-  //
-  //   [account] = parseRemark(infoRaw).split("#");
-  // }
+  if (extrinsic.extrinsic.signer.toString() === REFUND_ADDR) {
+    const {
+      args: [infoRaw],
+    } = calls.toArray()[2];
+
+    [account] = parseRemark(infoRaw).split("#");
+  }
 
   const record = DotContribution.create({
     id: extrinsic.extrinsic.hash.toString(),
