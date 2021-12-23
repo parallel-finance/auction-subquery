@@ -1,18 +1,19 @@
 type DotContribution @entity {
   id: ID!
-
   blockHeight: Int! @index
   paraId: Int! @index
-  account: String!
+  account: String! @index
   amount: String!
   referralCode: String
   timestamp: Date!
   transactionExecuted: Boolean!
   isValid: Boolean!
   executedBlockHeight: Int @index
+  termsSigned: String
 }
 
 type MoonbeanContribution @entity {
   id: ID!
   amount: String!
+  account: String!
 }

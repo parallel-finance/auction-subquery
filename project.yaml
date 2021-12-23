@@ -4,7 +4,8 @@ repository: "https://github.com/parallel-finance/auction-subquery"
 schema: ./schema.graphql
 network:
   # endpoint: wss://regnet-relay-rpc.parallel.fi
-  endpoint: wss://rpc.polkadot.io
+  endpoint: wss://staging-rpc.parallel.fi
+  # endpoint: wss://rpc.polkadot.io
   # dictionary: "https://api.subquery.network/sq/subquery/dictionary-kusama"
 dataSources:
   - name: app
@@ -13,6 +14,12 @@ dataSources:
     # startBlock: 162370
     mapping:
       handlers:
+        - handler: handleTermsForAllProjects
+          kind: substrate/CallHandler
+          filter:
+            module: utility
+            method: signAndSend
+            success: true
         - handler: handleBatchAll
           kind: substrate/CallHandler
           filter:

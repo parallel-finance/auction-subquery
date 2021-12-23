@@ -32,6 +32,24 @@ const checkTransactionInsideProxy = (sectionFilter: string, methodFilter: string
   return checkTransaction(sectionFilter, methodFilter, insideCall);
 };
 
+const handleTermsSigning = async (extrinsic: SubstrateExtrinsic) => {
+  const calls = extrinsic.extrinsic.args[0] as Vec<Extrinsic>;
+  const [signedTerms] = calls.toArray().map(c => parseRemark(c.args));
+  // filter terms based on  project
+  const paraId = 2004 // moonbeam
+
+  let account = extrinsic.extrinsic.signer.toString();
+  let records = await DotContribution.getByAccount(account);
+  records.filter(r => r.paraId === paraId).map(r => r.termsSigned = signedTerms)
+  logger.info(JSON.stringify(records));
+  (await Promise.all(records.map(r => r.save)))
+};
+
+export const handleTermsForAllProjects = async (extrinsic: SubstrateExtrinsic) => {
+  // get paraId from tx
+  await handleTermsSigning(extrinsic)
+}
+
 const handleDotContribution = async (extrinsic: SubstrateExtrinsic) => {
   const calls = extrinsic.extrinsic.args[0] as Vec<Extrinsic>;
   if (
