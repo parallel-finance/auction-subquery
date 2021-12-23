@@ -42,7 +42,7 @@ const handleTermsSigning = async (extrinsic: SubstrateExtrinsic) => {
   let records = await DotContribution.getByAccount(account);
   records.filter(r => r.paraId === paraId).map(r => r.termsSigned = signedTerms)
   logger.info(JSON.stringify(records));
-  (await Promise.all(records.map(r => r.save)))
+  (await Promise.all(records.map(r => r.save())))
 };
 
 export const handleTermsForAllProjects = async (extrinsic: SubstrateExtrinsic) => {

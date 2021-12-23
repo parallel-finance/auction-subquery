@@ -3,8 +3,8 @@ description: The project for getting the on chain data of Kusama
 repository: "https://github.com/parallel-finance/auction-subquery"
 schema: ./schema.graphql
 network:
-  # endpoint: wss://regnet-relay-rpc.parallel.fi
-  endpoint: wss://staging-rpc.parallel.fi
+  endpoint: wss://regnet-relay-rpc.parallel.fi
+  # endpoint: wss://staging-rpc.parallel.fi
   # endpoint: wss://rpc.polkadot.io
   # dictionary: "https://api.subquery.network/sq/subquery/dictionary-kusama"
 dataSources:
