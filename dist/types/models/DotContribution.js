@@ -39,6 +39,7 @@ class DotContribution {
         return records.map(record => DotContribution.create(record));
     }
     static create(record) {
+        (0, assert_1.default)(typeof record.id === 'string', "id must be provided");
         let entity = new DotContribution(record.id);
         Object.assign(entity, record);
         return entity;

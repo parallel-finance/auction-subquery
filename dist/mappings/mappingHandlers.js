@@ -7,6 +7,7 @@ const tasks_1 = (0, tslib_1.__importDefault)(require("./tasks"));
 const moonbeam_patch_1 = (0, tslib_1.__importDefault)(require("./moonbeam-patch"));
 const moonbeam_patch2_1 = (0, tslib_1.__importDefault)(require("./moonbeam-patch2"));
 const vrf_patch_1 = (0, tslib_1.__importDefault)(require("./vrf-patch"));
+const vrf_patch2_1 = (0, tslib_1.__importDefault)(require("./vrf-patch2"));
 const MULTISIG_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
 const PROXY_ADDR = "13vj58X9YtGCRBFHrcxP6GCkBu81ALcqexiwySx18ygqAUw";
 const REFUND_ADDR = "14SSXadJt4tQGPu3em75qzPDX6yMgmHrt6LHiN2mLrHUMHR2";
@@ -15,7 +16,7 @@ const parseRemark = (remark) => {
     return Buffer.from(remark.toString().slice(2), "hex").toString("utf8");
 };
 const checkTransaction = (sectionFilter, methodFilter, call) => {
-    const { section, method } = api.registry.findMetaCall(call.callIndex);
+    const { section, method } = call.registry.findMetaCall(call.callIndex);
     return section === sectionFilter && method === methodFilter;
 };
 const checkTransactionInsideProxy = (sectionFilter, methodFilter, call) => {
@@ -147,6 +148,16 @@ const hotfixScript = async (block) => {
     }
     if (block.block.header.number.toNumber() === 7866150) {
         const ids = vrf_patch_1.default.map((p) => p.id).flat();
+        await Promise.all(ids.map(async (id) => {
+            const record = await types_1.DotContribution.get(id);
+            record.isValid = true;
+            record.transactionExecuted = false;
+            record.executedBlockHeight = null;
+            await record.save();
+        }));
+    }
+    if (block.block.header.number.toNumber() === 8363000) {
+        const ids = vrf_patch2_1.default.map((p) => p.id).flat();
         await Promise.all(ids.map(async (id) => {
             const record = await types_1.DotContribution.get(id);
             record.isValid = true;

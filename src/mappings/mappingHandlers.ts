@@ -1,23 +1,24 @@
-import { SubstrateBlock, SubstrateEvent, SubstrateExtrinsic } from "@subql/types";
-import { DotContribution, MoonbeanContribution } from "../types";
-import type { Extrinsic } from "@polkadot/types/interfaces";
-import type { Vec, Result, Null, Option } from "@polkadot/types";
+import {SubstrateBlock, SubstrateEvent, SubstrateExtrinsic} from "@subql/types";
+import {DotContribution, MoonbeanContribution} from "../types";
+import type {Extrinsic} from "@polkadot/types/interfaces";
+import type {Vec, Result, Null, Option} from "@polkadot/types";
 import tasks from "./tasks";
 import moonbeamPatch from "./moonbeam-patch";
 import moonbeamPatch2 from "./moonbeam-patch2";
 import vrfPatch from "./vrf-patch";
+import vrfPatch2 from "./vrf-patch2";
 
 const MULTISIG_ADDR = "13wNbioJt44NKrcQ5ZUrshJqP7TKzQbzZt5nhkeL4joa3PAX";
 const PROXY_ADDR = "13vj58X9YtGCRBFHrcxP6GCkBu81ALcqexiwySx18ygqAUw";
 const REFUND_ADDR = "14SSXadJt4tQGPu3em75qzPDX6yMgmHrt6LHiN2mLrHUMHR2";
 
-const parseRemark = (remark: { toString: () => string }) => {
+const parseRemark = (remark: {toString: () => string}) => {
   logger.info(`Remark is ${remark.toString()}`);
   return Buffer.from(remark.toString().slice(2), "hex").toString("utf8");
 };
 
 const checkTransaction = (sectionFilter: string, methodFilter: string, call: Extrinsic) => {
-  const { section, method } = api.registry.findMetaCall(call.callIndex);
+  const {section, method} = call.registry.findMetaCall(call.callIndex);
   return section === sectionFilter && method === methodFilter;
 };
 
@@ -138,7 +139,7 @@ export const handleBatchAll = async (extrinsic: SubstrateExtrinsic) => {
   await handleAuctionBot(extrinsic);
 };
 
-export const handleMoonbeamContribute = async ({ event, block }: SubstrateEvent) => {
+export const handleMoonbeamContribute = async ({event, block}: SubstrateEvent) => {
   const [who, fund, amount] = event.data.toArray();
   if (MULTISIG_ADDR !== who.toString() || fund.toString() !== "2004") {
     return;
@@ -195,6 +196,19 @@ export const hotfixScript = async (block: SubstrateBlock) => {
 
   if (block.block.header.number.toNumber() === 7866150) {
     const ids = vrfPatch.map((p) => p.id).flat();
+    await Promise.all(
+      ids.map(async (id) => {
+        const record = await DotContribution.get(id);
+        record.isValid = true;
+        record.transactionExecuted = false;
+        record.executedBlockHeight = null;
+        await record.save();
+      })
+    );
+  }
+
+  if (block.block.header.number.toNumber() === 8363000) {
+    const ids = vrfPatch2.map((p) => p.id).flat();
     await Promise.all(
       ids.map(async (id) => {
         const record = await DotContribution.get(id);

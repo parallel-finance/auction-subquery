@@ -27,6 +27,7 @@ class MoonbeanContribution {
         }
     }
     static create(record) {
+        (0, assert_1.default)(typeof record.id === 'string', "id must be provided");
         let entity = new MoonbeanContribution(record.id);
         Object.assign(entity, record);
         return entity;
