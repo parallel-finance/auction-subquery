@@ -17,7 +17,7 @@ const parseRemark = (remark: { toString: () => string }) => {
 };
 
 const checkTransaction = (sectionFilter: string, methodFilter: string, call: Extrinsic) => {
-  const { section, method } = api.registry.findMetaCall(call.callIndex);
+  const { section, method } = call.registry.findMetaCall(call.callIndex);
   return section === sectionFilter && method === methodFilter;
 };
 

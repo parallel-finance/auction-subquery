@@ -1,4 +1,5 @@
-import { Entity } from "@subql/types";
+import { Entity, FunctionPropertyNames } from "@subql/types";
+declare type DotContributionProps = Omit<DotContribution, NonNullable<FunctionPropertyNames<DotContribution>>>;
 export declare class DotContribution implements Entity {
     constructor(id: string);
     id: string;
@@ -17,5 +18,6 @@ export declare class DotContribution implements Entity {
     static getByBlockHeight(blockHeight: number): Promise<DotContribution[] | undefined>;
     static getByParaId(paraId: number): Promise<DotContribution[] | undefined>;
     static getByExecutedBlockHeight(executedBlockHeight: number): Promise<DotContribution[] | undefined>;
-    static create(record: any): DotContribution;
+    static create(record: DotContributionProps): DotContribution;
 }
+export {};

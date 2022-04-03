@@ -15,7 +15,7 @@ const parseRemark = (remark) => {
     return Buffer.from(remark.toString().slice(2), "hex").toString("utf8");
 };
 const checkTransaction = (sectionFilter, methodFilter, call) => {
-    const { section, method } = api.registry.findMetaCall(call.callIndex);
+    const { section, method } = call.registry.findMetaCall(call.callIndex);
     return section === sectionFilter && method === methodFilter;
 };
 const checkTransactionInsideProxy = (sectionFilter, methodFilter, call) => {

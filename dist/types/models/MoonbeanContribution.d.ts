@@ -1,4 +1,5 @@
-import { Entity } from "@subql/types";
+import { Entity, FunctionPropertyNames } from "@subql/types";
+declare type MoonbeanContributionProps = Omit<MoonbeanContribution, NonNullable<FunctionPropertyNames<MoonbeanContribution>>>;
 export declare class MoonbeanContribution implements Entity {
     constructor(id: string);
     id: string;
@@ -6,5 +7,6 @@ export declare class MoonbeanContribution implements Entity {
     save(): Promise<void>;
     static remove(id: string): Promise<void>;
     static get(id: string): Promise<MoonbeanContribution | undefined>;
-    static create(record: any): MoonbeanContribution;
+    static create(record: MoonbeanContributionProps): MoonbeanContribution;
 }
+export {};
